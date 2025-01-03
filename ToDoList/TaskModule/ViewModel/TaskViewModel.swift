@@ -11,14 +11,31 @@ import Combine
 protocol TaskViewModelProtocol: AnyObject {
     var coordinator: CoordinatorProtocol! {get set}
     var updateTableState: PassthroughSubject<TableState, Never> {get set}
+    func getTask()
+    var task: Task? {get set}
 }
 
 final class TaskViewModel: TaskViewModelProtocol {
     var coordinator: CoordinatorProtocol!
     private let networkManager = NetworkManager.shared
     var updateTableState = PassthroughSubject<TableState, Never>()
+    var task: Task?
     
     private var cancellabele = Set<AnyCancellable>()
     
+    //MARK: - getTask
+    func getTask() {
+        networkManager.getTask { [weak self] result in
+            guard let self = self else { return }
+            switch result {
+            case .success(let task):
+                self.updateTableState.send(.success)
+                self.task = task
+            case .failure(let error):
+                self.updateTableState.send(.failure(error))
+                print(error)
+            }
+        }
+    }
     
 }

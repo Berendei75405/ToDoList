@@ -14,13 +14,13 @@ final class NetworkService {
     private init() {}
     
     //MARK: - makeRequestArray
-    func makeRequestArray<T: Decodable>(request: URLRequest, completion: @escaping (Result<[T], NetworkError>) -> Void) {
+    func makeRequestArray<T: Decodable>(request: URLRequest, completion: @escaping (Result<T, NetworkError>) -> Void) {
         
         //если есть кеш на запрос, то вернуть его, если нет то отправить запрос и записать кеш
         if let cashedResponse = URLCache.shared.cachedResponse(for: request) {
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            if let decodedData = try? decoder.decode([T].self, from: cashedResponse.data) {
+            if let decodedData = try? decoder.decode(T.self, from: cashedResponse.data) {
                 
                 completion(.success(decodedData))
                 return
@@ -53,8 +53,8 @@ final class NetworkService {
             if let data = data {
                 do {
                     let decoder = JSONDecoder()
-                    decoder.dateDecodingStrategy = .iso8601
-                    let decodedData = try decoder.decode([T].self, from: data)
+                    //decoder.dateDecodingStrategy = .iso8601
+                    let decodedData = try decoder.decode(T.self, from: data)
                     
                     //кеширование ответа
                     if response != nil {
