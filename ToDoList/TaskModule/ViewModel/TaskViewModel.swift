@@ -13,6 +13,7 @@ protocol TaskViewModelProtocol: AnyObject {
     var updateTableState: PassthroughSubject<TableState, Never> {get set}
     func getTask()
     var task: Task? {get set}
+    var editMode: Bool {get set}
 }
 
 final class TaskViewModel: TaskViewModelProtocol {
@@ -20,6 +21,7 @@ final class TaskViewModel: TaskViewModelProtocol {
     private let networkManager = NetworkManager.shared
     var updateTableState = PassthroughSubject<TableState, Never>()
     var task: Task?
+    var editMode: Bool = false
     
     private var cancellabele = Set<AnyCancellable>()
     
@@ -29,8 +31,8 @@ final class TaskViewModel: TaskViewModelProtocol {
             guard let self = self else { return }
             switch result {
             case .success(let task):
-                self.updateTableState.send(.success)
                 self.task = task
+                self.updateTableState.send(.success)
             case .failure(let error):
                 self.updateTableState.send(.failure(error))
                 print(error)
