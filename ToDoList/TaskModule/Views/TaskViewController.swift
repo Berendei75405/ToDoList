@@ -101,6 +101,7 @@ final class TaskViewController: UIViewController {
         
         //для клавиутуры
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        tapGesture.cancelsTouchesInView = false
         let tapToView = UITapGestureRecognizer(target: self, action: #selector(handleTapToView))
         tableView.addGestureRecognizer(tapGesture)
         self.navigationController?.navigationBar.addGestureRecognizer(tapToView)
@@ -272,9 +273,27 @@ extension TaskViewController: UITableViewDelegate,
         }
     }
     
+    //move
+    func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    
+    func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
+        if viewModel?.task?.todos != nil {
+            let source = viewModel?.task?.todos[sourceIndexPath.row - 1]
+            let destination = viewModel?.task?.todos[destinationIndexPath.row - 1]
+            viewModel?.task?.todos[sourceIndexPath.row - 1] = destination!
+            viewModel?.task?.todos[destinationIndexPath.row - 1] = source!
+        }
+    }
+    
+    
+    
     //MARK: - TabBarCustomDelegate
     func editMode() {
-        tableView.setEditing(!tableView.isEditing, animated: true)
+        viewModel?.editMode.toggle()
+        tableView.setEditing(viewModel?.editMode ?? false, animated: true)
+        
     }
     
     //MARK: - TaskTableCellProtocol

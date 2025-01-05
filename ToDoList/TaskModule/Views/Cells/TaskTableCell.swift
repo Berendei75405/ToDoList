@@ -161,16 +161,7 @@ final class TaskTableCell: UITableViewCell {
         completed.toggle()
     }
     
-    //MARK: - strikeText
-    private func strikeText(strike : String) -> NSMutableAttributedString {
-        let attributeString = NSMutableAttributedString(string: strike)
-        attributeString.addAttribute(NSAttributedString.Key.strikethroughStyle,
-                                     value: NSUnderlineStyle.single.rawValue,
-                                     range: NSMakeRange(0, attributeString.length))
-        
-        return attributeString
-    }
-    
+
     //MARK: - textToDefault
     private func textToDefault(attributedText: NSAttributedString?) -> NSAttributedString? {
         guard let aTxt = attributedText else { return nil }

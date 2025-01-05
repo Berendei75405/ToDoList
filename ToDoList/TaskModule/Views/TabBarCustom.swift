@@ -13,7 +13,7 @@ protocol TabBarCustomDelegate: AnyObject {
 
 final class TabBarCustom: UIView {
     
-    weak var delegate: TabBarCustomDelegate? 
+    weak var delegate: TabBarCustomDelegate?
     
     //MARK: - taskLabel
     private let taskLabel: UILabel = {
@@ -49,7 +49,7 @@ final class TabBarCustom: UIView {
     
     //MARK: - setupUI
     private func setupUI() {
-        backgroundColor = #colorLiteral(red: 0.2030287385, green: 0.2033452094, blue: 0.2129075825, alpha: 1)
+        backgroundColor = .tabBar
         
         self.addSubview(taskLabel)
         NSLayoutConstraint.activate([
