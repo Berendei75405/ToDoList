@@ -8,12 +8,21 @@
 import Foundation
 import UIKit
 
+protocol TaskTableCellProtocol: AnyObject {
+    func completeChange(index: Int)
+}
+
 final class TaskTableCell: UITableViewCell {
     
     static let identifier = "TaskTableCell"
     
+    weak var delegate: TaskTableCellProtocol?
+    
+    private var completed = false
+    var index: Int = 0
+    
     //MARK: - titleLabel
-    private var titleLabel: UILabel = {
+    let titleLabel: UILabel = {
         let lab = UILabel()
         lab.translatesAutoresizingMaskIntoConstraints = false
         lab.textColor = UIColor(named: "otherColor")
@@ -23,7 +32,7 @@ final class TaskTableCell: UITableViewCell {
     }()
     
     //MARK: - toDoLabel
-    private let toDoLabel: UILabel = {
+    let toDoLabel: UILabel = {
         let lab = UILabel()
         lab.translatesAutoresizingMaskIntoConstraints = false
         lab.textColor = UIColor(named: "otherColor")
@@ -43,13 +52,11 @@ final class TaskTableCell: UITableViewCell {
         return lab
     }()
     
-    var completed = false
-    
     let imageCircle = UIImage(named: "circle")
     let imageDone = UIImage(named: "done")
     
     //MARK: - doneButton
-    private lazy var doneButton: UIButton = {
+    lazy var doneButton: UIButton = {
         var button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         
@@ -60,6 +67,13 @@ final class TaskTableCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super .init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
+    }
+    
+    //Без этого будет некорректно работать зачеркивание!!!
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        titleLabel.attributedText = nil
+        toDoLabel.attributedText = nil
     }
     
     //MARK: - required init
@@ -130,20 +144,21 @@ final class TaskTableCell: UITableViewCell {
         if completed {
             doneButton.setImage(imageCircle,
                                 for: .normal)
-            completed = false
-            titleLabel.attributedText = textToDefault(
-                strike: titleLabel.text ?? "")
+            delegate?.completeChange(index: index)
+            titleLabel.attributedText = textToDefault(attributedText: titleLabel.attributedText)
             titleLabel.textColor = UIColor(named: "otherColor")
             toDoLabel.textColor = UIColor(named: "otherColor")
-            toDoLabel.attributedText = textToDefault(strike: toDoLabel.text ?? "")
         } else {
             doneButton.setImage(imageDone,
                                 for: .normal)
-            completed = true
-            titleLabel.attributedText = strikeText(strike: titleLabel.text ?? "")
+            delegate?.completeChange(index: index)
+            titleLabel.attributedText = NSAttributedString(
+                string: titleLabel.text ?? "",
+                attributes: [.strikethroughStyle: NSUnderlineStyle.single.rawValue])
             titleLabel.textColor = .gray
             toDoLabel.textColor = .gray
         }
+        completed.toggle()
     }
     
     //MARK: - strikeText
@@ -157,31 +172,38 @@ final class TaskTableCell: UITableViewCell {
     }
     
     //MARK: - textToDefault
-    private func textToDefault(strike : String) -> NSMutableAttributedString {
-        let attributeString = NSMutableAttributedString(string: strike)
-        attributeString.removeAttribute(NSAttributedString.Key.strikethroughStyle, range: NSMakeRange(0, attributeString.length))
-
+    private func textToDefault(attributedText: NSAttributedString?) -> NSAttributedString? {
+        guard let aTxt = attributedText else { return nil }
+        let mutableAttributedString = NSMutableAttributedString(attributedString: aTxt)
+        mutableAttributedString.removeAttribute(.strikethroughStyle, range: NSRange(location: 0, length: mutableAttributedString.length))
         
-        return attributeString
+        return mutableAttributedString
     }
     
     //MARK: - config
     func config(title: String,
                 todo: String,
                 dateString: String,
-                completed: Bool) {
+                completed: Bool,
+                index: Int) {
         
-        titleLabel.text = title
-        toDoLabel.text = todo
-        dateLabel.text = dateString
+        self.titleLabel.text = title
+        self.toDoLabel.text = todo
+        self.dateLabel.text = dateString
+        self.index = index
         self.completed = completed
-        
+
         completed ? doneButton.setImage(imageDone, for: .normal) : doneButton.setImage(imageCircle, for: .normal)
         
+        //состояние ячейки в зависимости от complete
         if completed {
-            titleLabel.attributedText = strikeText(strike: title)
+            titleLabel.attributedText = NSAttributedString(string: title, attributes: [.strikethroughStyle: NSUnderlineStyle.single.rawValue])
             titleLabel.textColor = .gray
             toDoLabel.textColor = .gray
+        } else {
+            titleLabel.attributedText = textToDefault(attributedText: titleLabel.attributedText)
+            titleLabel.textColor = .other
+            toDoLabel.textColor = .other
         }
     }
 }

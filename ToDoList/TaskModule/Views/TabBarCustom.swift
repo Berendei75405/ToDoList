@@ -7,7 +7,13 @@
 
 import UIKit
 
+protocol TabBarCustomDelegate: AnyObject {
+    func editMode()
+}
+
 final class TabBarCustom: UIView {
+    
+    weak var delegate: TabBarCustomDelegate? 
     
     //MARK: - taskLabel
     private let taskLabel: UILabel = {
@@ -52,6 +58,9 @@ final class TabBarCustom: UIView {
         ])
         
         self.addSubview(editButton)
+        editButton.addTarget(self,
+                             action: #selector(editAction),
+                             for: .touchUpInside)
         NSLayoutConstraint.activate([
             editButton.centerYAnchor.constraint(
                 equalTo: centerYAnchor, constant: -2),
@@ -68,5 +77,10 @@ final class TabBarCustom: UIView {
     //MARK: - configurate
     func configurate(task: Int) {
         taskLabel.text = "\(task) Задач"
+    }
+    
+    //MARK: - editAction
+    @objc private func editAction() {
+        delegate?.editMode()
     }
 }

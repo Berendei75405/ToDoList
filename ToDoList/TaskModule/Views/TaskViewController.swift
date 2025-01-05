@@ -44,61 +44,25 @@ final class TaskViewController: UIViewController {
                 case .initial:
                     print("Initial")
                 case .success:
-//                    activityView.isHidden = true
-//                    UIView.animate(withDuration: 0.8,
-//                                   delay: 0,
-//                                   options: .curveEaseInOut,
-//                                   animations: {
-//                        self.centerYConstraint.constant = self.view.frame.height * 2
-//                        self.view.layoutIfNeeded()
-//                    })
-//                    self.viewModel?.coordinator.showGistVC(
-//                        user: viewModel?.gistInfo ?? [], userName: viewModel?.userName ?? "Пользователь")
+                    tabBarCustom.configurate(task: viewModel?.task?.todos.count ?? 0)
                     self.tableView.reloadData()
                 case .failure(let error):
-//                    if viewModel?.error == nil {
-//                        viewModel?.error = error
-//                        activityView.isHidden = true
-//                        UIView.animate(withDuration: 0.8,
-//                                       delay: 0,
-//                                       options: .curveEaseInOut,
-//                                       animations: {
-//                            self.centerYConstraint.constant = 0
-//                            self.view.layoutIfNeeded()
-//                        })
-//                    } else {
-//                        viewModel?.error = nil
-//                        activityView.isHidden = true
-//                        UIView.animate(withDuration: 0.8,
-//                                       delay: 0,
-//                                       options: .curveEaseInOut,
-//                                       animations: {
-//                            self.centerYConstraint.constant = self.view.frame.height * 2
-//                            self.view.layoutIfNeeded()
-//                        })
-//                    }
-//                    switch error {
-//                    case .errorWithDescription(let string):
-//                        errorView.configurate(textError: string)
-//                    case .error(let error):
-//                        errorView.configurate(textError: error.localizedDescription)
-//                    }
-                    print("1")
+                    print(error)
                 }
             }
         }
     }
     
-    //MARK: - activityView
-    private var activityView: UIActivityIndicatorView = {
-        var progres = UIActivityIndicatorView(style: .large)
-        progres.translatesAutoresizingMaskIntoConstraints = false
-        progres.startAnimating()
-        progres.color = .black
-        progres.isHidden = true
-        
-        return progres
-    }()
+    //    //MARK: - activityView
+    //    private var activityView: UIActivityIndicatorView = {
+    //        var progres = UIActivityIndicatorView(style: .large)
+    //        progres.translatesAutoresizingMaskIntoConstraints = false
+    //        progres.startAnimating()
+    //        progres.color = .black
+    //        progres.isHidden = true
+    //
+    //        return progres
+    //    }()
     
     //MARK: - TabBarCustom
     private lazy var tabBarCustom: TabBarCustom = {
@@ -107,6 +71,7 @@ final class TaskViewController: UIViewController {
                                             width: view.frame.size.width,
                                             height: 49))
         tab.translatesAutoresizingMaskIntoConstraints = false
+        tab.delegate = self
         
         return tab
     }()
@@ -115,14 +80,13 @@ final class TaskViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        viewModel?.getTask()
         updateState()
     }
     
     //MARK: - viewWillAppear
     override func viewWillAppear(_ animated: Bool) {
         super .viewWillAppear(animated)
-        tabBarCustom.configurate(task: viewModel?.task?.todos.count ?? 0)
+        viewModel?.getTask()
     }
     
     //MARK: - setupUI
@@ -201,7 +165,9 @@ final class TaskViewController: UIViewController {
 }
 
 extension TaskViewController: UITableViewDelegate,
-                              UITableViewDataSource {
+                              UITableViewDataSource,
+                              TabBarCustomDelegate,
+                              TaskTableCellProtocol {
     //number of rows
     func tableView(_ tableView: UITableView,
                    numberOfRowsInSection section: Int) -> Int {
@@ -224,16 +190,24 @@ extension TaskViewController: UITableViewDelegate,
         } else {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: TaskTableCell.identifier, for: indexPath) as? TaskTableCell else { return UITableViewCell() }
             
-            cell.config(title: viewModel?.task?.todos[indexPath.row - 1].title ?? "",
-                        todo: viewModel?.task?.todos[indexPath.row - 1].todo ?? "",
-                        dateString: viewModel?.task?.todos[indexPath.row - 1].dateString ?? "",
-                        completed: viewModel?.task?.todos[indexPath.row - 1].completed ?? false)
+            let rowIndex = indexPath.row - 1
+            let title = viewModel?.task?.todos[rowIndex].title ?? ""
+            let todo = viewModel?.task?.todos[rowIndex].todo ?? ""
+            let dateString = viewModel?.task?.todos[rowIndex].dateString ?? ""
+            let completed = viewModel?.task?.todos[rowIndex].completed ?? false
+            
+            cell.config(title: title,
+                        todo: todo,
+                        dateString: dateString,
+                        completed: completed,
+                        index: rowIndex)
+            
+            cell.delegate = self
             cell.backgroundColor = UIColor(named: "backgroundColor")
             cell.selectionStyle = .none
             
             return cell
         }
-        
     }
     
     //height
@@ -241,24 +215,33 @@ extension TaskViewController: UITableViewDelegate,
         if indexPath.row == .zero {
             return 52
         } else {
-            return 106            
+            return 106
         }
     }
     
+    //создание контекстного меню
     func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-        let configuration = UIContextMenuConfiguration(identifier: indexPath.row as NSCopying, previewProvider: nil) { _ -> UIMenu? in
+        let configuration = UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ -> UIMenu? in
             // Создаем три действия
-            let action1 = UIAction(title: "1") { _ in
+            let action1 = UIAction(title: "Редактировать",
+                                   image: UIImage(named: "editContext")) { _ in
                 print("Нажата кнопка '1'")
             }
             
-            let action2 = UIAction(title: "2") { _ in
-                print("Нажата кнопка '2'")
+            let action2 = UIAction(title: "Поделиться",
+                                   image: UIImage(named: "export")) { [weak self] _ in
+                let items = ["\(self?.viewModel?.task?.todos[indexPath.row - 1].title ?? "")", "\(self?.viewModel?.task?.todos[indexPath.row - 1].todo ?? "")"]
+                let actViewCon = UIActivityViewController(activityItems: items, applicationActivities: nil)
+                self?.present(actViewCon, animated: true)
             }
             
-            let action3 = UIAction(title: "3") { _ in
-                print("Нажата кнопка '3'")
+            let action3 = UIAction(title: "Удалить",
+                                   image: UIImage(named: "trash")) { _ in
+                self.viewModel?.task?.todos.remove(at: indexPath.row - 1)
+                tableView.deleteRows(at: [indexPath], with: .left)
+                self.tabBarCustom.configurate(task: self.viewModel?.task?.todos.count ?? 0)
             }
+            
             
             // Объединяем их в одно меню
             let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [action1, action2, action3])
@@ -266,6 +249,37 @@ extension TaskViewController: UITableViewDelegate,
             return menu
         }
         
-        return configuration
+        return indexPath.row != .zero ? configuration : nil
     }
+    
+    
+    //возможность редактирования
+    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return indexPath.row != 0 ? true : false
+    }
+    
+    //чтобы выезжало справа меню
+    func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
+        return .delete
+    }
+    
+    //удаление ячеек через свайп влево
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            viewModel?.task?.todos.remove(at: indexPath.row - 1)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
+            tabBarCustom.configurate(task: viewModel?.task?.todos.count ?? 0)
+        }
+    }
+    
+    //MARK: - TabBarCustomDelegate
+    func editMode() {
+        tableView.setEditing(!tableView.isEditing, animated: true)
+    }
+    
+    //MARK: - TaskTableCellProtocol
+    func completeChange(index: Int) {
+        viewModel?.task?.todos[index].completed.toggle()
+    }
+    
 }
