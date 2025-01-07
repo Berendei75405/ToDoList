@@ -9,6 +9,7 @@ import UIKit
 
 protocol TabBarCustomDelegate: AnyObject {
     func editMode()
+    func addTask()
 }
 
 final class TabBarCustom: UIView {
@@ -35,6 +36,17 @@ final class TabBarCustom: UIView {
                         for: .normal)
         
         return button
+    }()
+    
+    //MARK: - addButton
+    private var addButton: UIButton = {
+        let but = UIButton()
+        let image = UIImage(named: "plus")
+        but.setImage(image,
+                     for: .normal)
+        but.translatesAutoresizingMaskIntoConstraints = false
+        
+        return but
     }()
     
     //MARK: - init
@@ -71,6 +83,21 @@ final class TabBarCustom: UIView {
                 constant: -74),
             editButton.heightAnchor.constraint(
                 equalToConstant: 50)
+        ])
+        
+        //MARK: - addButton
+        self.addSubview(addButton)
+        NSLayoutConstraint.activate([
+            addButton.leadingAnchor.constraint(
+                equalTo: leadingAnchor,
+                constant: 24),
+            addButton.centerYAnchor.constraint(
+                equalTo: centerYAnchor,
+                constant: -2),
+            addButton.widthAnchor.constraint(
+                equalToConstant: 25),
+            addButton.heightAnchor.constraint(
+                equalToConstant: 25)
         ])
     }
     
