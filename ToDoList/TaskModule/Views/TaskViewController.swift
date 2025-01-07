@@ -287,12 +287,13 @@ extension TaskViewController: UITableViewDelegate,
         }
     }
     
-    
-    
     //MARK: - TabBarCustomDelegate
     func editMode() {
         viewModel?.editMode.toggle()
         tableView.setEditing(viewModel?.editMode ?? false, animated: true)
+    }
+    
+    func addTask() {
         
     }
     
