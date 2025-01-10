@@ -11,14 +11,16 @@ import Combine
 protocol TaskViewModelProtocol: AnyObject {
     var coordinator: CoordinatorProtocol! {get set}
     var updateTableState: PassthroughSubject<TableState, Never> {get set}
-    func getTask()
     var task: Task? {get set}
     var editMode: Bool {get set}
+    func getTask()
+    func removeTodo(index: Int)
 }
 
 final class TaskViewModel: TaskViewModelProtocol {
     var coordinator: CoordinatorProtocol!
     private let networkManager = NetworkManager.shared
+    private let coreDataManager = CoreDataManager.shared
     var updateTableState = PassthroughSubject<TableState, Never>()
     var task: Task?
     var editMode: Bool = false
@@ -32,6 +34,7 @@ final class TaskViewModel: TaskViewModelProtocol {
             switch result {
             case .success(let task):
                 self.task = task
+                self.coreDataManager.fetchTask(task: task)
                 self.updateTableState.send(.success)
             case .failure(let error):
                 self.updateTableState.send(.failure(error))
@@ -39,5 +42,13 @@ final class TaskViewModel: TaskViewModelProtocol {
             }
         }
     }
+    
+    //MARK: - removeTodo
+    func removeTodo(index: Int) {
+        task?.todos.remove(at: index)
+        coreDataManager.removeTodo(index: index)
+    }
+    
+    
     
 }
