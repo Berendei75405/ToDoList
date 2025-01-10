@@ -238,7 +238,7 @@ extension TaskViewController: UITableViewDelegate,
             
             let action3 = UIAction(title: "Удалить",
                                    image: UIImage(named: "trash")) { _ in
-                self.viewModel?.task?.todos.remove(at: indexPath.row - 1)
+                self.viewModel?.removeTodo(index: indexPath.row - 1)
                 tableView.deleteRows(at: [indexPath], with: .left)
                 self.tabBarCustom.configurate(task: self.viewModel?.task?.todos.count ?? 0)
             }
@@ -267,7 +267,7 @@ extension TaskViewController: UITableViewDelegate,
     //удаление ячеек через свайп влево
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            viewModel?.task?.todos.remove(at: indexPath.row - 1)
+            viewModel?.removeTodo(index: indexPath.row - 1)
             tableView.deleteRows(at: [indexPath], with: .automatic)
             tabBarCustom.configurate(task: viewModel?.task?.todos.count ?? 0)
         }
