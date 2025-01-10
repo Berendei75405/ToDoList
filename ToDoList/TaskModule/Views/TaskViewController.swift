@@ -220,24 +220,29 @@ extension TaskViewController: UITableViewDelegate,
         }
     }
     
+    //выбор ячейки
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        viewModel?.showDetail(index: indexPath.row)
+    }
+    
     //создание контекстного меню
     func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let configuration = UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ -> UIMenu? in
             // Создаем три действия
             let action1 = UIAction(title: "Редактировать",
-                                   image: UIImage(named: "editContext")) { _ in
-                print("Нажата кнопка '1'")
+                                   image: UIImage(named: "editContext")) { [unowned self] _ in
+                self.viewModel?.showDetail(index: indexPath.row)
             }
             
             let action2 = UIAction(title: "Поделиться",
-                                   image: UIImage(named: "export")) { [weak self] _ in
-                let items = ["\(self?.viewModel?.task?.todos[indexPath.row - 1].title ?? "")", "\(self?.viewModel?.task?.todos[indexPath.row - 1].todo ?? "")"]
+                                   image: UIImage(named: "export")) { [unowned self] _ in
+                let items = ["\(self.viewModel?.task?.todos[indexPath.row - 1].title ?? "")", "\(self.viewModel?.task?.todos[indexPath.row - 1].todo ?? "")"]
                 let actViewCon = UIActivityViewController(activityItems: items, applicationActivities: nil)
-                self?.present(actViewCon, animated: true)
+                self.present(actViewCon, animated: true)
             }
             
             let action3 = UIAction(title: "Удалить",
-                                   image: UIImage(named: "trash")) { _ in
+                                   image: UIImage(named: "trash")) { [unowned self] _ in
                 self.viewModel?.removeTodo(index: indexPath.row - 1)
                 tableView.deleteRows(at: [indexPath], with: .left)
                 self.tabBarCustom.configurate(task: self.viewModel?.task?.todos.count ?? 0)

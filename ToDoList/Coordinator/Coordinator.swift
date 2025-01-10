@@ -9,8 +9,7 @@ import UIKit
 
 //MARK: - CoordinatorProtocol
 protocol CoordinatorProtocol: AnyObject {
-    func createTaskVC() -> UIViewController
-    func initialTaskVC()
+    func showDetailVC(todo: Todo)
 }
 
 final class Coordinator: CoordinatorProtocol {
@@ -37,6 +36,27 @@ final class Coordinator: CoordinatorProtocol {
             let view = createTaskVC()
             
             navController.viewControllers = [view]
+        }
+    }
+    
+    //MARK: - createDetialVC
+    func createDetialVC() -> UIViewController {
+        let view = DetailViewController()
+        let viewModel = DetailViewModel()
+        
+        view.viewModel = viewModel
+        viewModel.coordinator = self
+        
+        return view
+    }
+    
+    //MARK: - showDetailVC
+    func showDetailVC(todo: Todo) {
+        if let navController = navController {
+            guard let vc = createDetialVC() as? DetailViewController else { return }
+            vc.viewModel?.todo = todo
+            
+            navController.pushViewController(vc, animated: true)
         }
     }
     

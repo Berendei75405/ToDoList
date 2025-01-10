@@ -15,6 +15,7 @@ protocol TaskViewModelProtocol: AnyObject {
     var editMode: Bool {get set}
     func getTask()
     func removeTodo(index: Int)
+    func showDetail(index: Int)
 }
 
 final class TaskViewModel: TaskViewModelProtocol {
@@ -49,6 +50,10 @@ final class TaskViewModel: TaskViewModelProtocol {
         coreDataManager.removeTodo(index: index)
     }
     
-    
+    //MARK: - showDetail
+    func showDetail(index: Int) {
+        guard let todo = task?.todos[index - 1] else { return }
+        coordinator.showDetailVC(todo: todo)
+    }
     
 }
