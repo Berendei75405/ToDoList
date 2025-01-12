@@ -2,22 +2,53 @@
 //  DetailTableCell.swift
 //  ToDoList
 //
-//  Created by Novgorodcev on 10/01/2025.
+//  Created by Novgorodcev on 11/01/2025.
 //
 
 import Foundation
 import UIKit
 
+protocol DetailTableCellDelegate: AnyObject {
+    func heightWasChange(title: String,
+                         todo: String)
+}
+
 final class DetailTableCell: UITableViewCell {
     
     static let identifier = "DetailTableCell"
     
-    //MARK: - mainView
-    private let mainView: UIView = {
-        var view = UIView()
-        view.backgroundColor = .white
+    weak var delegate: DetailTableCellDelegate?
+    
+    //MARK: - titleView
+    private lazy var titleView: UITextView = {
+        let view = UITextView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.layer.cornerRadius = 20
+        view.font = .boldSystemFont(ofSize: 28)
+        view.textColor = .other
+        view.delegate = self
+        view.isScrollEnabled = false
+        
+        return view
+    }()
+    
+    //MARK: - dateLabel
+    private let dateLabel: UILabel = {
+        let lab = UILabel()
+        lab.translatesAutoresizingMaskIntoConstraints = false
+        lab.font = .systemFont(ofSize: 18)
+        lab.textColor = .gray
+        
+        return lab
+    }()
+    
+    //MARK: - titleView
+    private lazy var todoView: UITextView = {
+        let view = UITextView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.font = .systemFont(ofSize: 18)
+        view.textColor = .other
+        view.delegate = self
+        view.isScrollEnabled = false
         
         return view
     }()
@@ -35,18 +66,61 @@ final class DetailTableCell: UITableViewCell {
     
     //MARK: - setupUI
     private func setupUI() {
-        //mainView constraint
-        contentView.addSubview(mainView)
+        self.selectionStyle = .none
+        
+        //titleView constraints
+        contentView.addSubview(titleView)
         NSLayoutConstraint.activate([
-            mainView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            mainView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            mainView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            mainView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
+            titleView.topAnchor.constraint(
+                equalTo: contentView.topAnchor),
+            titleView.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor,
+                constant: 8),
+            titleView.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor,
+                constant: -8)
+        ])
+        
+        //dateLabel constraints
+        contentView.addSubview(dateLabel)
+        NSLayoutConstraint.activate([
+            dateLabel.topAnchor.constraint(
+                equalTo: titleView.bottomAnchor),
+            dateLabel.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor,
+                constant: 8),
+            dateLabel.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor,
+                constant: -8)
+        ])
+        
+        //todoView constraints
+        contentView.addSubview(todoView)
+        NSLayoutConstraint.activate([
+            todoView.topAnchor.constraint(
+                equalTo: dateLabel.bottomAnchor),
+            todoView.leadingAnchor.constraint(
+                equalTo: contentView.leadingAnchor,
+                constant: 8),
+            todoView.trailingAnchor.constraint(
+                equalTo: contentView.trailingAnchor,
+                constant: -8)
         ])
     }
     
     //MARK: - config
-    func config() {
-        
+    func config(title: String,
+                dateString: String,
+                todo: String) {
+        titleView.text = title
+        dateLabel.text = dateString
+        todoView.text = todo
     }
 }
+
+extension DetailTableCell: UITextViewDelegate {
+    func textViewDidChange(_ textView: UITextView) {
+        delegate?.heightWasChange(title: titleView.text, todo: todoView.text)
+    }
+}
+
