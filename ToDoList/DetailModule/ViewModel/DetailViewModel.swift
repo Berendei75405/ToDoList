@@ -9,9 +9,9 @@ import Foundation
 import Combine
 
 protocol DetailViewModelProtocol: AnyObject {
-    var coordinator: CoordinatorProtocol! {get set}
     var updateTableState: PassthroughSubject<TableState, Never> {get set}
     var todo: Todo? {get set}
+    func popToRoot()
 }
 
 final class DetailViewModel: DetailViewModelProtocol {
@@ -20,5 +20,8 @@ final class DetailViewModel: DetailViewModelProtocol {
     private var cancellabele = Set<AnyCancellable>()
     
     var todo: Todo?
-    
+
+    func popToRoot() {
+        coordinator.popToRoot()
+    }
 }

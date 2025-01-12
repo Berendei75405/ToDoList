@@ -9,7 +9,6 @@ import Foundation
 import Combine
 
 protocol TaskViewModelProtocol: AnyObject {
-    var coordinator: CoordinatorProtocol! {get set}
     var updateTableState: PassthroughSubject<TableState, Never> {get set}
     var task: Task? {get set}
     var editMode: Bool {get set}

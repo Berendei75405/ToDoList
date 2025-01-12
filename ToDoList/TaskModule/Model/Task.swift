@@ -15,8 +15,8 @@ struct Task: Codable {
 // MARK: - Todo
 struct Todo: Codable {
     let id: Int
-    let title: String
-    let todo: String
+    var title: String
+    var todo: String
     var completed: Bool
     let userID: Int
     let dateString: String

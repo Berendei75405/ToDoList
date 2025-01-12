@@ -10,6 +10,7 @@ import UIKit
 //MARK: - CoordinatorProtocol
 protocol CoordinatorProtocol: AnyObject {
     func showDetailVC(todo: Todo)
+    func popToRoot()
 }
 
 final class Coordinator: CoordinatorProtocol {
@@ -57,6 +58,13 @@ final class Coordinator: CoordinatorProtocol {
             vc.viewModel?.todo = todo
             
             navController.pushViewController(vc, animated: true)
+        }
+    }
+    
+    func popToRoot() {
+        if let navController = navController {
+            navController.navigationBar.prefersLargeTitles = true
+            navController.popViewController(animated: true)
         }
     }
     
