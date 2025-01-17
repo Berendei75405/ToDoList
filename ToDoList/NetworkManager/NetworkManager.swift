@@ -14,9 +14,8 @@ final class NetworkManager {
     private init() {}
     
     func getTask(completion: @escaping (Result<Task, NetworkError>) -> Void) {
-        let url = URL(string: "https://run.mocky.io/v3/4a517c25-3062-43ca-9152-b8a8be7a3188")!
-        var request = URLRequest(url: url,
-                                 cachePolicy: .useProtocolCachePolicy, timeoutInterval: 60.0)
+        let url = URL(string: "https://run.mocky.io/v3/56938c80-4956-482d-979b-7261619004ca")!
+        var request = URLRequest(url: url)
         
         request.httpMethod = "GET"
         

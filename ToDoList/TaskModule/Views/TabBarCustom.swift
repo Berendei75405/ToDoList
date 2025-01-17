@@ -87,6 +87,9 @@ final class TabBarCustom: UIView {
         
         //MARK: - addButton
         self.addSubview(addButton)
+        addButton.addTarget(self,
+                            action: #selector(addAction),
+                            for: .touchUpInside)
         NSLayoutConstraint.activate([
             addButton.leadingAnchor.constraint(
                 equalTo: leadingAnchor,
@@ -109,5 +112,10 @@ final class TabBarCustom: UIView {
     //MARK: - editAction
     @objc private func editAction() {
         delegate?.editMode()
+    }
+    
+    //MARK: - addAction
+    @objc private func addAction() {
+        delegate?.addTask()
     }
 }

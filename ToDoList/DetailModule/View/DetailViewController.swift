@@ -130,7 +130,6 @@ extension DetailViewController: UITableViewDelegate,
         
         let lab = calculateTextHeight(text: viewModel?.todo?.dateString ?? "", font: .systemFont(ofSize: 18))
         
-        print(titleView + todoView + lab)
         return titleView + todoView + lab
     }
     
@@ -138,6 +137,7 @@ extension DetailViewController: UITableViewDelegate,
     func heightWasChange(title: String, todo: String) {
         viewModel?.todo?.title = title
         viewModel?.todo?.todo = todo
+        
         UIView.setAnimationsEnabled(false)
         tableView.beginUpdates()
         tableView.endUpdates()
