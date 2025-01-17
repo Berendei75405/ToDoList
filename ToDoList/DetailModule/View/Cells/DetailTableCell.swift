@@ -27,6 +27,7 @@ final class DetailTableCell: UITableViewCell {
         view.textColor = .other
         view.delegate = self
         view.isScrollEnabled = false
+        view.becomeFirstResponder()
         
         return view
     }()
@@ -122,5 +123,16 @@ extension DetailTableCell: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         delegate?.heightWasChange(title: titleView.text, todo: todoView.text)
     }
+    
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        if text == "\n" && textView == titleView {
+            titleView.resignFirstResponder()
+            todoView.becomeFirstResponder()
+            
+            return false
+        }
+        return true
+    }
+    
 }
 

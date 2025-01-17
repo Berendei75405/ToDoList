@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 final class NetworkService {
     static let shared = NetworkService()
     
@@ -15,17 +14,6 @@ final class NetworkService {
     
     //MARK: - makeRequestArray
     func makeRequestArray<T: Decodable>(request: URLRequest, completion: @escaping (Result<T, NetworkError>) -> Void) {
-        
-        //если есть кеш на запрос, то вернуть его, если нет то отправить запрос и записать кеш
-        if let cashedResponse = URLCache.shared.cachedResponse(for: request) {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            if let decodedData = try? decoder.decode(T.self, from: cashedResponse.data) {
-                
-                completion(.success(decodedData))
-                return
-            }
-        }
             
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
             

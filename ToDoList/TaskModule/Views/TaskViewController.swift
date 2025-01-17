@@ -29,7 +29,6 @@ final class TaskViewController: UIViewController {
         table.dataSource = self
         
         //регистрация ячеек
-        table.register(SearchTableCell.self, forCellReuseIdentifier: SearchTableCell.identifier)
         table.register(TaskTableCell.self, forCellReuseIdentifier: TaskTableCell.identifier)
         
         return table
@@ -53,16 +52,16 @@ final class TaskViewController: UIViewController {
         }
     }
     
-    //    //MARK: - activityView
-    //    private var activityView: UIActivityIndicatorView = {
-    //        var progres = UIActivityIndicatorView(style: .large)
-    //        progres.translatesAutoresizingMaskIntoConstraints = false
-    //        progres.startAnimating()
-    //        progres.color = .black
-    //        progres.isHidden = true
-    //
-    //        return progres
-    //    }()
+    //MARK: - searchBar
+    var searchBar: UISearchBar = {
+        var bar = UISearchBar()
+        bar.translatesAutoresizingMaskIntoConstraints = false
+        bar.barStyle = .default
+        bar.placeholder = "Search"
+        bar.backgroundImage = UIImage()
+        
+        return bar
+    }()
     
     //MARK: - TabBarCustom
     private lazy var tabBarCustom: TabBarCustom = {
@@ -86,7 +85,9 @@ final class TaskViewController: UIViewController {
     //MARK: - viewWillAppear
     override func viewWillAppear(_ animated: Bool) {
         super .viewWillAppear(animated)
+        tabBarCustom.configurate(task: viewModel?.task?.todos.count ?? 0)
         viewModel?.getTask()
+        viewModel?.createFiltredTask()
     }
     
     //MARK: - setupUI
@@ -106,11 +107,23 @@ final class TaskViewController: UIViewController {
         tableView.addGestureRecognizer(tapGesture)
         self.navigationController?.navigationBar.addGestureRecognizer(tapToView)
         
+        //searchBar constraints
+        searchBar.delegate = self
+        view.addSubview(searchBar)
+        NSLayoutConstraint.activate([
+            searchBar.topAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.topAnchor),
+            searchBar.leadingAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            searchBar.trailingAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.trailingAnchor)
+        ])
+        
         //tableView constraint
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(
-                equalTo: view.topAnchor),
+                equalTo: searchBar.bottomAnchor),
             tableView.leadingAnchor.constraint(
                 equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(
@@ -132,6 +145,7 @@ final class TaskViewController: UIViewController {
             tabBarCustom.trailingAnchor.constraint(
                 equalTo: view.trailingAnchor)
         ])
+        
     }
     
     //MARK: - updateState
@@ -168,56 +182,44 @@ final class TaskViewController: UIViewController {
 extension TaskViewController: UITableViewDelegate,
                               UITableViewDataSource,
                               TabBarCustomDelegate,
-                              TaskTableCellProtocol {
+                              TaskTableCellProtocol,
+                              UISearchBarDelegate {
     //number of rows
     func tableView(_ tableView: UITableView,
                    numberOfRowsInSection section: Int) -> Int {
-        guard let todosCount = viewModel?.task?.todos.count else { return 0}
+        guard let todosCount = viewModel?.filtredTask.count else { return 0}
         
-        return todosCount + 1
+        return todosCount
     }
     
     //configurate cell
     func tableView(_ tableView: UITableView,
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        //первая ячейка поиск
-        if indexPath.row == .zero {
-            guard let cell = tableView.dequeueReusableCell(withIdentifier: SearchTableCell.identifier, for: indexPath) as? SearchTableCell else { return UITableViewCell() }
-            cell.selectionStyle = .none
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
-            
-            return cell
-        } else {
-            guard let cell = tableView.dequeueReusableCell(withIdentifier: TaskTableCell.identifier, for: indexPath) as? TaskTableCell else { return UITableViewCell() }
-            
-            let rowIndex = indexPath.row - 1
-            let title = viewModel?.task?.todos[rowIndex].title ?? ""
-            let todo = viewModel?.task?.todos[rowIndex].todo ?? ""
-            let dateString = viewModel?.task?.todos[rowIndex].dateString ?? ""
-            let completed = viewModel?.task?.todos[rowIndex].completed ?? false
-            
-            cell.config(title: title,
-                        todo: todo,
-                        dateString: dateString,
-                        completed: completed,
-                        index: rowIndex)
-            
-            cell.delegate = self
-            cell.backgroundColor = UIColor(named: "backgroundColor")
-            cell.selectionStyle = .none
-            
-            return cell
-        }
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: TaskTableCell.identifier, for: indexPath) as? TaskTableCell else { return UITableViewCell() }
+        
+        let rowIndex = indexPath.row
+        let title = viewModel?.filtredTask[rowIndex].title ?? ""
+        let todo = viewModel?.filtredTask[rowIndex].todo ?? ""
+        let dateString = viewModel?.filtredTask[rowIndex].dateString ?? ""
+        let completed = viewModel?.filtredTask[rowIndex].completed ?? false
+        
+        cell.config(title: title,
+                    todo: todo,
+                    dateString: dateString,
+                    completed: completed,
+                    index: rowIndex)
+        
+        cell.delegate = self
+        cell.backgroundColor = UIColor(named: "backgroundColor")
+        cell.selectionStyle = .none
+        
+        return cell
     }
     
     //height
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        if indexPath.row == .zero {
-            return 52
-        } else {
-            return 106
-        }
+        return 106
     }
     
     //выбор ячейки
@@ -236,14 +238,14 @@ extension TaskViewController: UITableViewDelegate,
             
             let action2 = UIAction(title: "Поделиться",
                                    image: UIImage(named: "export")) { [unowned self] _ in
-                let items = ["\(self.viewModel?.task?.todos[indexPath.row - 1].title ?? "")", "\(self.viewModel?.task?.todos[indexPath.row - 1].todo ?? "")"]
+                let items = ["\(self.viewModel?.task?.todos[indexPath.row].title ?? "")", "\(self.viewModel?.task?.todos[indexPath.row].todo ?? "")"]
                 let actViewCon = UIActivityViewController(activityItems: items, applicationActivities: nil)
                 self.present(actViewCon, animated: true)
             }
             
             let action3 = UIAction(title: "Удалить",
                                    image: UIImage(named: "trash")) { [unowned self] _ in
-                self.viewModel?.removeTodo(index: indexPath.row - 1)
+                self.viewModel?.removeTodo(index: indexPath.row)
                 tableView.deleteRows(at: [indexPath], with: .left)
                 self.tabBarCustom.configurate(task: self.viewModel?.task?.todos.count ?? 0)
             }
@@ -261,7 +263,7 @@ extension TaskViewController: UITableViewDelegate,
     
     //возможность редактирования
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        return indexPath.row != 0 ? true : false
+        return true
     }
     
     //чтобы выезжало справа меню
@@ -272,24 +274,15 @@ extension TaskViewController: UITableViewDelegate,
     //удаление ячеек через свайп влево
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            viewModel?.removeTodo(index: indexPath.row - 1)
-            tableView.deleteRows(at: [indexPath], with: .automatic)
+            viewModel?.removeTodo(index: indexPath.row)
             tabBarCustom.configurate(task: viewModel?.task?.todos.count ?? 0)
+            tableView.deleteRows(at: [indexPath], with: .automatic)
         }
     }
     
     //move
     func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    
-    func tableView(_ tableView: UITableView, moveRowAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath) {
-        if viewModel?.task?.todos != nil {
-            let source = viewModel?.task?.todos[sourceIndexPath.row - 1]
-            let destination = viewModel?.task?.todos[destinationIndexPath.row - 1]
-            viewModel?.task?.todos[sourceIndexPath.row - 1] = destination!
-            viewModel?.task?.todos[destinationIndexPath.row - 1] = source!
-        }
+        return false
     }
     
     //MARK: - TabBarCustomDelegate
@@ -299,12 +292,34 @@ extension TaskViewController: UITableViewDelegate,
     }
     
     func addTask() {
-        
+        viewModel?.showDetail(index: nil)
     }
     
     //MARK: - TaskTableCellProtocol
     func completeChange(index: Int) {
         viewModel?.task?.todos[index].completed.toggle()
+    }
+    
+    //MARK: - UISearchBarDelegate
+    func searchBar(_ searchBar: UISearchBar,
+                   textDidChange searchText: String) {
+        viewModel?.filtredTask = []
+        var array: [IndexPath] = []
+        if searchText == "" {
+            viewModel?.createFiltredTask()
+        }
+        
+        for todo in viewModel?.task?.todos ?? [] {
+            if todo.title.uppercased().contains(searchText.uppercased()) {
+                viewModel?.filtredTask.append(todo)
+            }
+        }
+        
+        for item in viewModel?.filtredTask ?? [] {
+            array.append(IndexPath(row: item.id,
+                                       section: .zero))
+        }
+        self.tableView.reloadData()
     }
     
 }

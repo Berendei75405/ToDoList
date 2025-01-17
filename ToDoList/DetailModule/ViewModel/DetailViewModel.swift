@@ -10,7 +10,7 @@ import Combine
 
 protocol DetailViewModelProtocol: AnyObject {
     var updateTableState: PassthroughSubject<TableState, Never> {get set}
-    var todo: Todo? {get set}
+    var todo: Todo! {get set}
     func popToRoot()
 }
 
@@ -18,10 +18,13 @@ final class DetailViewModel: DetailViewModelProtocol {
     var coordinator: CoordinatorProtocol!
     var updateTableState = PassthroughSubject<TableState, Never>()
     private var cancellabele = Set<AnyCancellable>()
+    private let coreDataManager = CoreDataManager.shared
     
-    var todo: Todo?
-
+    var todo: Todo!
+    
     func popToRoot() {
         coordinator.popToRoot()
+        coreDataManager.editTodo(todo: todo)
     }
+    
 }
