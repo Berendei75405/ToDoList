@@ -7,10 +7,11 @@
 
 import Foundation
 
-final class NetworkService {
-    static let shared = NetworkService()
-    
-    private init() {}
+protocol NetworkServiceProtocol: AnyObject {
+    func makeRequestArray<T: Decodable>(request: URLRequest, completion: @escaping (Result<T, NetworkError>) -> Void)
+}
+
+final class NetworkService: NetworkServiceProtocol {
     
     //MARK: - makeRequestArray
     func makeRequestArray<T: Decodable>(request: URLRequest, completion: @escaping (Result<T, NetworkError>) -> Void) {

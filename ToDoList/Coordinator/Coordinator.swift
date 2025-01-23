@@ -24,9 +24,17 @@ final class Coordinator: CoordinatorProtocol {
     func createTaskVC() -> UIViewController {
         let view = TaskViewController()
         let viewModel = TaskViewModel()
+        let networkManager = NetworkManager()
+        let networkService = NetworkService()
+        let coreDataManager = CoreDataManager()
 
         view.viewModel = viewModel
+        
         viewModel.coordinator = self
+        viewModel.networkManager = networkManager
+        viewModel.coreDataManager = coreDataManager
+        
+        networkManager.networkService = networkService
         
         return view
     }
@@ -44,9 +52,11 @@ final class Coordinator: CoordinatorProtocol {
     func createDetialVC() -> UIViewController {
         let view = DetailViewController()
         let viewModel = DetailViewModel()
+        let coreDataManager = CoreDataManager()
         
         view.viewModel = viewModel
         viewModel.coordinator = self
+        viewModel.coreDataManager = coreDataManager
         
         return view
     }

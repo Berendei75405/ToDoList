@@ -7,14 +7,16 @@
 
 import Foundation
 
-final class NetworkManager {
-    private var networkService = NetworkService.shared
-    static let shared = NetworkManager()
-    
-    private init() {}
+protocol NetworkManagerProtocol: AnyObject {
+    func getTask(completion: @escaping (Result<Task, NetworkError>) -> Void)
+    var networkService: NetworkServiceProtocol! {get}
+}
+
+final class NetworkManager: NetworkManagerProtocol {
+    var networkService: NetworkServiceProtocol!
     
     func getTask(completion: @escaping (Result<Task, NetworkError>) -> Void) {
-        let url = URL(string: "https://run.mocky.io/v3/56938c80-4956-482d-979b-7261619004ca")!
+        let url = URL(string: "https://run.mocky.io/v3/7d1167d0-3315-46c7-b258-8dad1dc581eb")!
         var request = URLRequest(url: url)
         
         request.httpMethod = "GET"

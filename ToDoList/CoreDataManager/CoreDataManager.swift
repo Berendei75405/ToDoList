@@ -8,9 +8,15 @@
 import Foundation
 import CoreData
 
-final class CoreDataManager {
-    static let shared = CoreDataManager()
-    private init() {}
+//MARK: - CoreDataManagerProtocol
+protocol CoreDataManagerProtocol: AnyObject {
+    func fetchTask(task: Task)
+    func removeTodo(index: Int)
+    func getTask() -> Task?
+    func editTodo(todo: Todo)
+}
+
+final class CoreDataManager: CoreDataManagerProtocol {
     
     //context
     private lazy var mainContext = persistentContainer.viewContext
@@ -21,6 +27,7 @@ final class CoreDataManager {
         
         return context
     }()
+    
     
     //container
     private lazy var persistentContainer: NSPersistentContainer = {
@@ -125,12 +132,12 @@ final class CoreDataManager {
                                         completed: todos.completed,
                                         userID: Int(todos.userID),
                                         dateString: todos.dateString ?? "")
-                
+        
                 taskModel.todos.append(todoForModel)
             }
             
             taskModel.todos = taskModel.todos.sorted { $0.id < $1.id }
-        
+    
             return taskModel
         } catch {
             print("Ошибка при выполнении запроса: $error)")
