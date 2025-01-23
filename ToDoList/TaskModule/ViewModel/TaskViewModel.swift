@@ -67,7 +67,8 @@ final class TaskViewModel: TaskViewModelProtocol {
     //MARK: - showDetail
     func showDetail(index: Int?) {
         if index != nil {
-            guard let todo = task?.todos[index!] else { return }
+            let todo = filtredTask[index!]
+            print(todo.title, todo.id)
             coordinator.showDetailVC(todo: todo)
         } else {
             let indexNew = (task?.todos.count ?? 0) + 1

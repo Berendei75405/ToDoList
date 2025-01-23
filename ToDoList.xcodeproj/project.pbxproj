@@ -30,30 +30,38 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1425438E2D41FF400065BE48 /* Exceptions for "ToDoList" folder in "ViewModelTest" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				UnitTests/ViewModelTest/ViewModelTest.swift,
+			);
+			target = 14046F012D41009600567092 /* ViewModelTest */;
+		};
+		142543922D41FF410065BE48 /* Exceptions for "ToDoList" folder in "CoreDataTest" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				UnitTests/CoreDataTest/CoreDataTest.swift,
+			);
+			target = 14046F5B2D41012800567092 /* CoreDataTest */;
+		};
 		149ABF022D1A5A7C005761B4 /* Exceptions for "ToDoList" folder in "ToDoList" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				UnitTests/CoreDataTest/CoreDataTest.swift,
+				UnitTests/ViewModelTest/ViewModelTest.swift,
 			);
 			target = 149ABEEF2D1A5A7B005761B4 /* ToDoList */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		14046F032D41009600567092 /* ViewModelTest */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ViewModelTest;
-			sourceTree = "<group>";
-		};
-		14046F5D2D41012800567092 /* CoreDataTest */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = CoreDataTest;
-			sourceTree = "<group>";
-		};
 		149ABEF22D1A5A7B005761B4 /* ToDoList */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				149ABF022D1A5A7C005761B4 /* Exceptions for "ToDoList" folder in "ToDoList" target */,
+				1425438E2D41FF400065BE48 /* Exceptions for "ToDoList" folder in "ViewModelTest" target */,
+				142543922D41FF410065BE48 /* Exceptions for "ToDoList" folder in "CoreDataTest" target */,
 			);
 			path = ToDoList;
 			sourceTree = "<group>";
@@ -89,8 +97,6 @@
 			isa = PBXGroup;
 			children = (
 				149ABEF22D1A5A7B005761B4 /* ToDoList */,
-				14046F032D41009600567092 /* ViewModelTest */,
-				14046F5D2D41012800567092 /* CoreDataTest */,
 				149ABEF12D1A5A7B005761B4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -121,9 +127,6 @@
 			dependencies = (
 				14046F072D41009600567092 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				14046F032D41009600567092 /* ViewModelTest */,
-			);
 			name = ViewModelTest;
 			packageProductDependencies = (
 			);
@@ -143,9 +146,6 @@
 			);
 			dependencies = (
 				14046F612D41012800567092 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				14046F5D2D41012800567092 /* CoreDataTest */,
 			);
 			name = CoreDataTest;
 			packageProductDependencies = (
