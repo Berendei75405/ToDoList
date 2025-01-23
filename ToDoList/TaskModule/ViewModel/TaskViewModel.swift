@@ -13,6 +13,8 @@ protocol TaskViewModelProtocol: AnyObject {
     var task: Task? {get set}
     var filtredTask: [Todo] {get set}
     var editMode: Bool {get set}
+    var networkManager: NetworkManagerProtocol! {get}
+    var coreDataManager: CoreDataManagerProtocol! {get}
     func getTask()
     func removeTodo(index: Int)
     func showDetail(index: Int?)
@@ -21,8 +23,8 @@ protocol TaskViewModelProtocol: AnyObject {
 
 final class TaskViewModel: TaskViewModelProtocol {
     var coordinator: CoordinatorProtocol!
-    private let networkManager = NetworkManager.shared
-    private let coreDataManager = CoreDataManager.shared
+    var networkManager: NetworkManagerProtocol!
+    var coreDataManager: CoreDataManagerProtocol!
     var updateTableState = PassthroughSubject<TableState, Never>()
     var task: Task? {
         didSet {
@@ -58,7 +60,6 @@ final class TaskViewModel: TaskViewModelProtocol {
     //MARK: - removeTodo
     func removeTodo(index: Int) {
         let newIndex = filtredTask[index].id
-        print(newIndex)
         coreDataManager.removeTodo(index: newIndex)
         task = coreDataManager.getTask()
     }
@@ -75,7 +76,7 @@ final class TaskViewModel: TaskViewModelProtocol {
             formatter.dateFormat = "dd.MM.yy"
             let formattedDateString = formatter.string(from: currentDate)
             
-            let todo  = Todo(id: indexNew, title: "Новая заметка", todo: "", completed: false, userID: Int.random(in: 0...100), dateString: formattedDateString)
+            let todo = Todo(id: indexNew, title: "Новая заметка", todo: "", completed: false, userID: Int.random(in: 0...100), dateString: formattedDateString)
             coreDataManager.editTodo(todo: todo)
             
             coordinator.showDetailVC(todo: todo)
