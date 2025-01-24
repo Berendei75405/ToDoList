@@ -40,6 +40,12 @@ final class DetailViewController: UIViewController {
         setupUI()
     }
     
+    //MARK: - viewWillDisappear
+    override func viewWillDisappear(_ animated: Bool) {
+        super .viewWillDisappear(animated)
+        viewModel?.saveChanges()
+    }
+    
     //MARK: - setupUI
     private func setupUI() {
         //nav button

@@ -87,7 +87,6 @@ final class TaskViewController: UIViewController {
         super .viewWillAppear(animated)
         tabBarCustom.configurate(task: viewModel?.task?.todos.count ?? 0)
         viewModel?.getTask()
-        viewModel?.createFiltredTask()
     }
     
     //MARK: - setupUI
