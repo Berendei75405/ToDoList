@@ -34,7 +34,6 @@
 
 **7. Необходимо убедиться, что проект открывается на Xcode 15.**
 
-
-
-
+# Работающее приложение
+https://github.com/user-attachments/assets/0e4a81e0-bb98-4a3a-b29b-9a015b627fd8
   
