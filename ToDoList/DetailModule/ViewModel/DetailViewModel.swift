@@ -11,8 +11,9 @@ import Combine
 protocol DetailViewModelProtocol: AnyObject {
     var updateTableState: PassthroughSubject<TableState, Never> {get set}
     var todo: Todo! {get set}
-    var coreDataManager: CoreDataManagerProtocol! {get}
+    var coreDataManager: CoreDataManagerProtocol! {get set}
     func popToRoot()
+    func saveChanges()
 }
 
 final class DetailViewModel: DetailViewModelProtocol {
@@ -25,6 +26,9 @@ final class DetailViewModel: DetailViewModelProtocol {
     
     func popToRoot() {
         coordinator.popToRoot()
+    }
+    
+    func saveChanges() {
         coreDataManager.editTodo(todo: todo)
     }
     

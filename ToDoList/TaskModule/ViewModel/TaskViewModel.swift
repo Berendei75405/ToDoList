@@ -14,7 +14,7 @@ protocol TaskViewModelProtocol: AnyObject {
     var filtredTask: [Todo] {get set}
     var editMode: Bool {get set}
     var networkManager: NetworkManagerProtocol! {get}
-    var coreDataManager: CoreDataManagerProtocol! {get}
+//    var coreDataManager: CoreDataManagerProtocol! {get set}
     func getTask()
     func removeTodo(index: Int)
     func showDetail(index: Int?)
@@ -68,7 +68,6 @@ final class TaskViewModel: TaskViewModelProtocol {
     func showDetail(index: Int?) {
         if index != nil {
             let todo = filtredTask[index!]
-            print(todo.title, todo.id)
             coordinator.showDetailVC(todo: todo)
         } else {
             let indexNew = (task?.todos.count ?? 0) + 1
