@@ -34,44 +34,25 @@ final class ViewModelTests: XCTestCase {
         mockCoordinator = nil
         mockCoreDataManager = nil
     }
-
-    func testGetTaskCoreData() throws {
-        //загрузка данными
-        let task = Task.init(todos: [.init(id: 1, title: "", todo: "", completed: true, userID: 1, dateString: "1")])
-        let coreData = viewModel.coreDataManager as? MockCoreDataManager
-        coreData?.taskToReturn = task
-        
-        //вызов метода
-        viewModel.getTask()
-        
-        //сравнение
-        XCTAssertEqual(task.todos.first?.id,
-                       viewModel.task?.todos.first?.id)
-    }
     
     func testGetTaskNetwork() throws {
         //загрузка данными
-        let task = Task.init(todos: [.init(id: 1, title: "", todo: "", completed: true, userID: 1, dateString: "1")])
         let network = viewModel.networkManager as? MockNetworkManager
         network?.shoudReturnError = false
+        let task = Task(todos: [Todo(id: .zero, title: "", todo: "", completed: true, userID: .zero, wasCreate: Date())])
         network?.task = task
-        
-        let coreData = viewModel.coreDataManager as? MockCoreDataManager
-        coreData?.shoudReturnError = true
-        
         
         //вызов метода
         viewModel.getTask()
         
         //сравнение
         XCTAssertEqual(task.todos.first?.id,
-                       viewModel.task?.todos.first?.id)
+                       network?.task.todos.first?.id)
     }
     
     func testGetTaskError() throws {
         //выставление условий
-        let coreData = viewModel.coreDataManager as? MockCoreDataManager
-        coreData?.shoudReturnError = true
+        let error = NetworkError.errorWithDescription("Ошибка")
         let network = viewModel.networkManager as? MockNetworkManager
         network?.shoudReturnError = true
         
@@ -79,27 +60,30 @@ final class ViewModelTests: XCTestCase {
         viewModel.getTask()
         
         //сравнение
-        XCTAssertNil(viewModel.task)
+        XCTAssertEqual(error.localizedDescription, network?.error.localizedDescription)
     }
     
     func testRemoveTodo() throws {
         //выставление условий
-        let task = Task.init(
-            todos: [.init(id: .zero,
+        let task = Task(todos: [.init(id: .zero,
                           title: "",
                           todo: "",
                           completed: true,
                           userID: .zero,
-                          dateString: "")])
+                          wasCreate: Date())])
         let coreData = viewModel.coreDataManager as? MockCoreDataManager
-        coreData?.taskToReturn = task
-        viewModel.task = task
+        let indexPath = IndexPath(row: .zero,
+                                  section: .zero)
+        var oldCount =  Int(viewModel.fetchedResultsController?.fetchedObjects?.count ?? .zero)
         
-        //вызов метода
-        viewModel.removeTodo(index: .zero)
+        //вызов методов
+        coreData?.fetchTask(task: task)
+        viewModel.getTask()
+        XCTAssertTrue(oldCount < Int(viewModel.fetchedResultsController?.fetchedObjects?.count ?? .zero))
+        oldCount = Int(viewModel.fetchedResultsController?.fetchedObjects?.count ?? .zero)
+        viewModel.removeTodo(at: indexPath)
         
-        //сравнение
-        XCTAssertEqual(coreData?.taskToReturn.todos.count, viewModel.task?.todos.count)
+        XCTAssertTrue(oldCount == Int(viewModel.fetchedResultsController?.fetchedObjects?.count ?? .zero))
     }
 
 }

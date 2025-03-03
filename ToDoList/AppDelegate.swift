@@ -6,12 +6,25 @@
 //
 
 import UIKit
+import CoreData
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
-
-
+    
+    //контейнер для coreData
+    static var persistentContainer: NSPersistentContainer = {
+        let container = NSPersistentContainer(name: "TaskModel")
+        container.viewContext.automaticallyMergesChangesFromParent = true
+        
+        container.loadPersistentStores { description, error in
+            if let error {
+                fatalError("Unable to load persistent stores: \(error)")
+            }
+        }
+        
+        return container
+    }()
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         return true

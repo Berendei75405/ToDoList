@@ -16,7 +16,7 @@ final class NetworkManager: NetworkManagerProtocol {
     var networkService: NetworkServiceProtocol!
     
     func getTask(completion: @escaping (Result<Task, NetworkError>) -> Void) {
-        let url = URL(string: "https://run.mocky.io/v3/7d1167d0-3315-46c7-b258-8dad1dc581eb")!
+        let url = URL(string: "https://run.mocky.io/v3/8213488e-9963-4290-9c43-ab6f2684ccd1")!
         var request = URLRequest(url: url)
         
         request.httpMethod = "GET"

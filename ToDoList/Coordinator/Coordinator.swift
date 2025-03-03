@@ -9,7 +9,7 @@ import UIKit
 
 //MARK: - CoordinatorProtocol
 protocol CoordinatorProtocol: AnyObject {
-    func showDetailVC(todo: Todo)
+    func showDetailVC(id: Int)
     func popToRoot()
 }
 
@@ -26,12 +26,13 @@ final class Coordinator: CoordinatorProtocol {
         let viewModel = TaskViewModel()
         let networkManager = NetworkManager()
         let networkService = NetworkService()
+        let coreDataManager = CoreDataManager()
 
         view.viewModel = viewModel
         
         viewModel.coordinator = self
         viewModel.networkManager = networkManager
-        viewModel.coreDataManager = CoreDataManager.shared
+        viewModel.coreDataManager = coreDataManager
         
         networkManager.networkService = networkService
         
@@ -51,19 +52,20 @@ final class Coordinator: CoordinatorProtocol {
     func createDetialVC() -> UIViewController {
         let view = DetailViewController()
         let viewModel = DetailViewModel()
+        let coreDataManager = CoreDataManager()
         
         view.viewModel = viewModel
         viewModel.coordinator = self
-        viewModel.coreDataManager = CoreDataManager.shared
+        viewModel.coreDataManager = coreDataManager
         
         return view
     }
     
     //MARK: - showDetailVC
-    func showDetailVC(todo: Todo) {
+    func showDetailVC(id: Int) {
         if let navController = navController {
             guard let vc = createDetialVC() as? DetailViewController else { return }
-            vc.viewModel?.todo = todo
+            vc.viewModel?.fetchTodo(id: id)
             
             navController.pushViewController(vc, animated: true)
         }

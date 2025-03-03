@@ -10,38 +10,24 @@ import CoreData
 
 //MARK: - CoreDataManagerProtocol
 protocol CoreDataManagerProtocol: AnyObject {
+    var persistentContainer: NSPersistentContainer { get set }
     func fetchTask(task: Task)
-    func removeTodo(index: Int)
-    func getTask() -> Task?
-    func editTodo(todo: Todo)
+    func taskIsEmpty() -> Bool
+    func saveChangesContext(contextIsView: Bool)
+    func addTodos(newIndex: Int)
 }
 
 final class CoreDataManager: CoreDataManagerProtocol {
-    static let shared = CoreDataManager()
     
-    private init() {}
+    //MARK: - context
+    var mainContext = AppDelegate.persistentContainer.viewContext
+    var backgroundContext = AppDelegate.persistentContainer.newBackgroundContext()
     
-    //context
-    private lazy var mainContext = persistentContainer.viewContext
-    private lazy var backgroundContext: NSManagedObjectContext = {
-        let context = persistentContainer.newBackgroundContext()
-        
-        return context
-    }()
-    
-    //container
-    private lazy var persistentContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "TaskModel")
-        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
-            if let error = error as? NSError {
-                print(error)
-            }
-        })
-        return container
-    }()
+    //MARK: - persistentContainer
+    var persistentContainer = AppDelegate.persistentContainer
     
     //MARK: - saveChangesContext
-    private func saveChangesContext(contextIsView: Bool) {
+    func saveChangesContext(contextIsView: Bool) {
         let context = contextIsView ? mainContext : backgroundContext
         
         guard context.hasChanges else { return }
@@ -53,7 +39,7 @@ final class CoreDataManager: CoreDataManagerProtocol {
         }
     }
     
-    ///метод используется для записи в coreData задач с интернета
+    //MARK: - fetchTask
     func fetchTask(task: Task) {
         //проверка нет ли записей
         let request = TaskModel.fetchRequest()
@@ -67,119 +53,42 @@ final class CoreDataManager: CoreDataManagerProtocol {
                 let todo = Todos(context: self.mainContext)
                 todo.title = item.title
                 todo.todo = item.todo
-                todo.dateString = item.dateString
+                todo.wasCreate = item.wasCreate
                 todo.completed = item.completed
                 todo.id = Int16(item.id)
                 todo.userID = Int16(item.userID)
                 
                 //указываем связывание!
-                taskCoreData.addToTodo(todo)
+                taskCoreData.addToTodos(todo)
             }
             self.saveChangesContext(contextIsView: true)
         }
-        
     }
     
-    /// Метод позволяющий удалять задачи
-    func removeTodo(index: Int) {
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "TaskModel")
+    //MARK: - taskIsEmpty
+    func taskIsEmpty() -> Bool {
+        let request = Todos.fetchRequest()
+        let todos = try? mainContext.fetch(request)
         
-        let batchDeleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
-        batchDeleteRequest.resultType = .resultTypeObjectIDs
-        
-        do {
-            guard let taskModels = try mainContext.fetch(fetchRequest).first else { return }
-            guard let taskModel = taskModels as? TaskModel else { return }
-            guard taskModel.todo != nil else { return }
-            
-            for taskModel in taskModel.todo! {
-                guard let todos = taskModel as? Todos else { return }
-                //удаление элемента
-                if index == todos.id {
-                    mainContext.delete(todos)
-                    saveChangesContext(contextIsView: true)
-                }
-                
-                //изменение других индексов
-                if index < todos.id {
-                    todos.id -= 1
-                    saveChangesContext(contextIsView: true)
-                }
-            }
-        } catch {
-            print("Ошибка при пакетном удалении Todo: $error)")
-        }
-        
+        return todos?.count == 0
     }
     
-    ///Получение задач
-    func getTask() -> Task? {
-        let fetchRequest = NSFetchRequest<TaskModel>(entityName: "TaskModel")
+    //MARK: - func addTodos
+    func addTodos(newIndex: Int) {
+        let request = TaskModel.fetchRequest()
+        guard let task = try? mainContext.fetch(request).first else { return }
         
-        guard ((try? mainContext.count(for: fetchRequest)) != nil) else { return nil }
+        let todos = Todos(context: mainContext)
+        todos.id = Int16(newIndex)
+        todos.completed = false
+        todos.title = ""
+        todos.todo = ""
+        todos.userID = Int16(newIndex)
+        todos.wasCreate = Date()
+        todos.taskModel = task
+        task.addToTodos(todos)
         
-        do {
-            let results = try mainContext.fetch(fetchRequest)
-            guard let task = results.first else { return nil }
-            
-            var todosArray = [Todo]()
-            
-            for todo in task.todo! {
-                guard let todos = todo as? Todos else { return nil }
-                
-                let todoForModel = Todo(
-                    id: Int(todos.id),
-                    title: todos.title!,
-                    todo: todos.todo!,
-                    completed: todos.completed,
-                    userID: Int(todos.userID),
-                    dateString: todos.dateString!)
-                
-                todosArray.append(todoForModel)
-            }
-            
-            let sortesArray = todosArray.sorted { $0.id < $1.id }
-          
-            return Task(todos: sortesArray)
-        } catch {
-            print("Ошибка при выполнении запроса: $error)")
-            return nil
-        }
-    }
-    
-    //MARK: - editTodo
-    func editTodo(todo: Todo) {
-        let fetchRequest = NSFetchRequest<TaskModel>(entityName: "TaskModel")
-        
-        do {
-            let taskModels = try mainContext.fetch(fetchRequest)
-            
-            //поиск существующего обьекта
-            if let taskModel = taskModels.first {
-                if let todos = taskModel.todo?.filter({ ($0 as! Todos).id == Int16(todo.id) }).first as? Todos {
-                    // Обновление найденного объекта
-                    todos.title = todo.title
-                    todos.completed = todo.completed
-                    todos.dateString = todo.dateString
-                    todos.todo = todo.todo
-                } else {
-                    // Создание нового объекта Todos, если его не было
-                    let newTodo = Todos(context: mainContext)
-                    newTodo.completed = todo.completed
-                    newTodo.dateString = todo.dateString
-                    newTodo.title = todo.title
-                    newTodo.id = Int16(todo.id)
-                    newTodo.todo = todo.todo
-                    newTodo.userID = Int16(todo.userID)
-                    
-                    taskModel.addToTodo(newTodo)
-                }
-            }
-            saveChangesContext(contextIsView: true)
-            
-        } catch {
-            print("Ошибка при пакетном удалении Todo: $error)")
-        }
+        saveChangesContext(contextIsView: true)
     }
     
 }

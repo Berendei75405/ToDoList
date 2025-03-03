@@ -8,8 +8,9 @@
 import Foundation
 import UIKit
 
+//MARK: - TaskTableCellProtocol
 protocol TaskTableCellProtocol: AnyObject {
-    func completeChange(index: Int)
+    func completeChange(at indexPath: IndexPath)
 }
 
 final class TaskTableCell: UITableViewCell {
@@ -19,7 +20,8 @@ final class TaskTableCell: UITableViewCell {
     weak var delegate: TaskTableCellProtocol?
     
     private var completed = false
-    var index: Int = 0
+    var indexPath: IndexPath = IndexPath(item: .zero,
+                                         section: .zero)
     
     //MARK: - titleLabel
     let titleLabel: UILabel = {
@@ -83,6 +85,10 @@ final class TaskTableCell: UITableViewCell {
     
     //MARK: - setupUI
     private func setupUI() {
+        //cell configurate
+        self.backgroundColor = UIColor(named: "backgroundColor")
+        self.selectionStyle = .none
+        
         //doneButton constraints
         doneButton.addTarget(self,
                              action: #selector(doneButtonAction),
@@ -144,14 +150,14 @@ final class TaskTableCell: UITableViewCell {
         if completed {
             doneButton.setImage(imageCircle,
                                 for: .normal)
-            delegate?.completeChange(index: index)
+            delegate?.completeChange(at: indexPath)
             titleLabel.attributedText = textToDefault(attributedText: titleLabel.attributedText)
             titleLabel.textColor = UIColor(named: "otherColor")
             toDoLabel.textColor = UIColor(named: "otherColor")
         } else {
             doneButton.setImage(imageDone,
                                 for: .normal)
-            delegate?.completeChange(index: index)
+            delegate?.completeChange(at: indexPath)
             titleLabel.attributedText = NSAttributedString(
                 string: titleLabel.text ?? "",
                 attributes: [.strikethroughStyle: NSUnderlineStyle.single.rawValue])
@@ -176,12 +182,12 @@ final class TaskTableCell: UITableViewCell {
                 todo: String,
                 dateString: String,
                 completed: Bool,
-                index: Int) {
+                indexPath: IndexPath) {
         
         self.titleLabel.text = title
         self.toDoLabel.text = todo
         self.dateLabel.text = dateString
-        self.index = index
+        self.indexPath = indexPath
         self.completed = completed
 
         completed ? doneButton.setImage(imageDone, for: .normal) : doneButton.setImage(imageCircle, for: .normal)
