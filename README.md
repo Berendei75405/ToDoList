@@ -34,11 +34,15 @@
 
 **7. Необходимо убедиться, что проект открывается на Xcode 15.**
 
-# Работающее приложение
-https://github.com/user-attachments/assets/0e4a81e0-bb98-4a3a-b29b-9a015b627fd8
+# Работающее приложение https://github.com/user-attachments/assets/0e4a81e0-bb98-4a3a-b29b-9a015b627fd8
 
 **Unit Тестирование**
 <img width="1432" alt="Снимок экрана 2025-01-24 в 10 36 00" src="https://github.com/user-attachments/assets/05201446-58d0-48a6-92bd-54f829096164" />
+
+# Работа над замечаниями 
+* Не нужно использовать singletone для работы с данными
+
+Исправленно добавлением в coreDataManager протоколов и выноса NSPersistentContainer в appDelegate. Без singletone возникала утечка данных, поскольку не было единого контейнера.
 
 
   
