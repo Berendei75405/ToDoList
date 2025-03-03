@@ -7,6 +7,7 @@
 
 import UIKit
 import Combine
+import CoreData
 
 final class TaskViewController: UIViewController {
     
@@ -41,10 +42,12 @@ final class TaskViewController: UIViewController {
                 guard let self = self else { return }
                 switch tableState {
                 case .initial:
-                    print("Initial")
+                    viewModel?.fetchedResultsController?.delegate = self
+                    tableView.reloadData()
                 case .success:
-                    tabBarCustom.configurate(task: viewModel?.task?.todos.count ?? 0)
-                    self.tableView.reloadData()
+                    tabBarCustom.configurate(task: viewModel?.numberOfTask(inSection: .zero) ?? 0)
+                    viewModel?.fetchedResultsController?.delegate = self
+                    tableView.reloadData()
                 case .failure(let error):
                     print(error)
                 }
@@ -80,13 +83,15 @@ final class TaskViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         updateState()
+        viewModel?.getTask()
     }
     
     //MARK: - viewWillAppear
     override func viewWillAppear(_ animated: Bool) {
-        super .viewWillAppear(animated)
-        tabBarCustom.configurate(task: viewModel?.task?.todos.count ?? 0)
-        viewModel?.getTask()
+        super.viewWillAppear(animated)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute:  {
+            self.viewModel?.removeEmptyTodo()
+        })
     }
     
     //MARK: - setupUI
@@ -100,7 +105,7 @@ final class TaskViewController: UIViewController {
         navigationItem.standardAppearance = appearance
         
         //для клавиутуры
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTapToView))
         tapGesture.cancelsTouchesInView = false
         let tapToView = UITapGestureRecognizer(target: self, action: #selector(handleTapToView))
         tableView.addGestureRecognizer(tapGesture)
@@ -154,23 +159,6 @@ final class TaskViewController: UIViewController {
         }).store(in: &cancellabele)
     }
     
-    
-    //MARK: - handleTap
-    @objc func handleTap(sender: UITapGestureRecognizer) {
-        let location = sender.location(in: self.view)
-        
-        // Получаем индекс пути ячейки, содержащей UISearchBar
-        let indexPath = IndexPath(row: 0, section: 0)
-        
-        // Проверка, что ячейка существует
-        guard let cell = tableView.cellForRow(at: indexPath) as? SearchTableCell else { return }
-        
-        // Проверяем, произошло ли касание вне рамки UISearchBar
-        if !cell.searchBar.frame.contains(location) {
-            self.view.endEditing(true)
-        }
-    }
-    
     //MARK: - handleTapToView
     @objc private func handleTapToView(sender: UITapGestureRecognizer) {
         self.view.endEditing(true)
@@ -182,11 +170,14 @@ extension TaskViewController: UITableViewDelegate,
                               UITableViewDataSource,
                               TabBarCustomDelegate,
                               TaskTableCellProtocol,
-                              UISearchBarDelegate {
+                              UISearchBarDelegate,
+                              NSFetchedResultsControllerDelegate  {
+    //MARK: - tableViewDataSource
     //number of rows
     func tableView(_ tableView: UITableView,
                    numberOfRowsInSection section: Int) -> Int {
-        guard let todosCount = viewModel?.filtredTask.count else { return 0}
+        let todosCount = viewModel?.numberOfTask(
+            inSection: section) ?? 0
         
         return todosCount
     }
@@ -197,21 +188,21 @@ extension TaskViewController: UITableViewDelegate,
         
         guard let cell = tableView.dequeueReusableCell(withIdentifier: TaskTableCell.identifier, for: indexPath) as? TaskTableCell else { return UITableViewCell() }
         
-        let rowIndex = indexPath.row
-        let title = viewModel?.filtredTask[rowIndex].title ?? ""
-        let todo = viewModel?.filtredTask[rowIndex].todo ?? ""
-        let dateString = viewModel?.filtredTask[rowIndex].dateString ?? ""
-        let completed = viewModel?.filtredTask[rowIndex].completed ?? false
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd.MM.yy"
+        
+        let title = viewModel?.task(at: indexPath)?.title ?? ""
+        let todo = viewModel?.task(at: indexPath)?.todo ?? ""
+        let dateString = dateFormatter.string(from: viewModel?.task(at: indexPath)?.wasCreate ?? Date())
+        let completed = viewModel?.task(at: indexPath)?.completed ?? false
         
         cell.config(title: title,
                     todo: todo,
                     dateString: dateString,
                     completed: completed,
-                    index: rowIndex)
+                    indexPath: indexPath)
         
         cell.delegate = self
-        cell.backgroundColor = UIColor(named: "backgroundColor")
-        cell.selectionStyle = .none
         
         return cell
     }
@@ -223,7 +214,7 @@ extension TaskViewController: UITableViewDelegate,
     
     //выбор ячейки
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        viewModel?.showDetail(index: indexPath.row)
+        viewModel?.showDetail(indexPath: indexPath)
     }
     
     //создание контекстного меню
@@ -232,23 +223,22 @@ extension TaskViewController: UITableViewDelegate,
             // Создаем три действия
             let action1 = UIAction(title: "Редактировать",
                                    image: UIImage(named: "editContext")) { [unowned self] _ in
-                self.viewModel?.showDetail(index: indexPath.row)
+                self.viewModel?.showDetail(indexPath: indexPath)
             }
             
             let action2 = UIAction(title: "Поделиться",
                                    image: UIImage(named: "export")) { [unowned self] _ in
-                let items = ["\(self.viewModel?.task?.todos[indexPath.row].title ?? "")", "\(self.viewModel?.task?.todos[indexPath.row].todo ?? "")"]
+                let items = [
+                    viewModel?.task(at: indexPath)?.title ?? "",
+                    viewModel?.task(at: indexPath)?.todo ?? ""]
                 let actViewCon = UIActivityViewController(activityItems: items, applicationActivities: nil)
                 self.present(actViewCon, animated: true)
             }
             
             let action3 = UIAction(title: "Удалить",
                                    image: UIImage(named: "trash")) { [unowned self] _ in
-                self.viewModel?.removeTodo(index: indexPath.row)
-                tableView.deleteRows(at: [indexPath], with: .left)
-                self.tabBarCustom.configurate(task: self.viewModel?.task?.todos.count ?? 0)
+                self.viewModel?.removeTodo(at: indexPath)
             }
-            
             
             // Объединяем их в одно меню
             let menu = UIMenu(title: "", image: nil, identifier: nil, options: [], children: [action1, action2, action3])
@@ -256,7 +246,7 @@ extension TaskViewController: UITableViewDelegate,
             return menu
         }
         
-        return indexPath.row != .zero ? configuration : nil
+        return configuration
     }
     
     
@@ -273,9 +263,7 @@ extension TaskViewController: UITableViewDelegate,
     //удаление ячеек через свайп влево
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            viewModel?.removeTodo(index: indexPath.row)
-            tabBarCustom.configurate(task: viewModel?.task?.todos.count ?? 0)
-            tableView.deleteRows(at: [indexPath], with: .automatic)
+            viewModel?.removeTodo(at: indexPath)
         }
     }
     
@@ -291,34 +279,40 @@ extension TaskViewController: UITableViewDelegate,
     }
     
     func addTask() {
-        viewModel?.showDetail(index: nil)
+        viewModel?.addTask()
     }
     
     //MARK: - TaskTableCellProtocol
-    func completeChange(index: Int) {
-        viewModel?.task?.todos[index].completed.toggle()
+    func completeChange(at indexPath: IndexPath) {
+        viewModel?.changeTaskState(at: indexPath)
     }
     
     //MARK: - UISearchBarDelegate
     func searchBar(_ searchBar: UISearchBar,
                    textDidChange searchText: String) {
-        viewModel?.filtredTask = []
-        var array: [IndexPath] = []
-        if searchText == "" {
-            viewModel?.createFiltredTask()
+        viewModel?.updateSearchFilter(searchText: searchText)
+    }
+    
+    func controller(_ controller: NSFetchedResultsController<any NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        switch type {
+        case .insert:
+            guard let indexPath = newIndexPath else { return }
+            self.tabBarCustom.configurate(task: viewModel?.numberOfTask(inSection: indexPath.section) ?? .zero)
+            tableView.reloadData()
+        case .delete:
+            guard let indexPath = indexPath else { return }
+            tableView.deleteRows(at: [indexPath],
+                                 with: .left)
+            self.tabBarCustom.configurate(task: viewModel?.numberOfTask(inSection: indexPath.section) ?? .zero)
+        case .move:
+            print("Move")
+        case .update:
+            guard let indexPath = indexPath else { return }
+            self.tabBarCustom.configurate(task: viewModel?.numberOfTask(inSection: indexPath.section) ?? .zero)
+            tableView.reloadData()
+        default:
+            print("Error state")
         }
-        
-        for todo in viewModel?.task?.todos ?? [] {
-            if todo.title.uppercased().contains(searchText.uppercased()) {
-                viewModel?.filtredTask.append(todo)
-            }
-        }
-        
-        for item in viewModel?.filtredTask ?? [] {
-            array.append(IndexPath(row: item.id,
-                                       section: .zero))
-        }
-        self.tableView.reloadData()
     }
     
 }

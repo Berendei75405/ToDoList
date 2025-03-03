@@ -111,10 +111,10 @@ final class DetailTableCell: UITableViewCell {
     
     //MARK: - config
     func config(title: String,
-                dateString: String,
+                wasCreate: String,
                 todo: String) {
         titleView.text = title
-        dateLabel.text = dateString
+        dateLabel.text = wasCreate
         todoView.text = todo
     }
 }

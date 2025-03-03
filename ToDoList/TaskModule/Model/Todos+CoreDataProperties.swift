@@ -2,7 +2,7 @@
 //  Todos+CoreDataProperties.swift
 //  ToDoList
 //
-//  Created by Novgorodcev on 10/01/2025.
+//  Created by Novgorodcev on 20/02/2025.
 //
 //
 
@@ -17,7 +17,7 @@ extension Todos {
     }
 
     @NSManaged public var completed: Bool
-    @NSManaged public var dateString: String?
+    @NSManaged public var wasCreate: Date?
     @NSManaged public var id: Int16
     @NSManaged public var title: String?
     @NSManaged public var todo: String?

@@ -2,7 +2,7 @@
 //  TaskModel+CoreDataProperties.swift
 //  ToDoList
 //
-//  Created by Novgorodcev on 10/01/2025.
+//  Created by Novgorodcev on 20/02/2025.
 //
 //
 
@@ -16,24 +16,24 @@ extension TaskModel {
         return NSFetchRequest<TaskModel>(entityName: "TaskModel")
     }
 
-    @NSManaged public var todo: NSSet?
+    @NSManaged public var todos: NSSet?
 
 }
 
-// MARK: Generated accessors for todo
+// MARK: Generated accessors for todos
 extension TaskModel {
 
-    @objc(addTodoObject:)
-    @NSManaged public func addToTodo(_ value: Todos)
+    @objc(addTodosObject:)
+    @NSManaged public func addToTodos(_ value: Todos)
 
-    @objc(removeTodoObject:)
-    @NSManaged public func removeFromTodo(_ value: Todos)
+    @objc(removeTodosObject:)
+    @NSManaged public func removeFromTodos(_ value: Todos)
 
-    @objc(addTodo:)
-    @NSManaged public func addToTodo(_ values: NSSet)
+    @objc(addTodos:)
+    @NSManaged public func addToTodos(_ values: NSSet)
 
-    @objc(removeTodo:)
-    @NSManaged public func removeFromTodo(_ values: NSSet)
+    @objc(removeTodos:)
+    @NSManaged public func removeFromTodos(_ values: NSSet)
 
 }
 

@@ -14,11 +14,28 @@ final class DetailViewController: UIViewController {
     private var centerYConstraint: NSLayoutConstraint!
     private var cancellabele = Set<AnyCancellable>()
     
+    //MARK: - tableState
+    private var tableState: TableState = .initial {
+        didSet {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                switch tableState {
+                case .initial:
+                    tableView.reloadData()
+                case .success:
+                    tableView.reloadData()
+                case .failure(let error):
+                    print(error)
+                }
+            }
+        }
+    }
+    
     //MARK: - tableView
     private lazy var tableView: UITableView = {
         var table  = UITableView(frame: .zero, style: .plain)
         
-        table.backgroundColor = .background
+        table.backgroundColor = UIColor(named: "backgroundColor")
         table.translatesAutoresizingMaskIntoConstraints = false
         table.separatorStyle = .none
         table.showsVerticalScrollIndicator = false
@@ -38,12 +55,6 @@ final class DetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-    }
-    
-    //MARK: - viewWillDisappear
-    override func viewWillDisappear(_ animated: Bool) {
-        super .viewWillDisappear(animated)
-        viewModel?.saveChanges()
     }
     
     //MARK: - setupUI
@@ -70,9 +81,16 @@ final class DetailViewController: UIViewController {
             tableView.bottomAnchor.constraint(
                 equalTo: view.bottomAnchor)
         ])
-        
     }
     
+    //MARK: - updateState
+    private func updateState() {
+        viewModel?.updateTableState.sink(receiveValue: { [unowned self] state in
+            self.tableState = state
+        }).store(in: &cancellabele)
+    }
+    
+    //MARK: - calculateTextHeight
     private func calculateTextHeight(text: String,
                                      font: UIFont) -> CGFloat {
         let txt = UITextView(frame: CGRect(x: 0,
@@ -110,12 +128,15 @@ extension DetailViewController: UITableViewDelegate,
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: DetailTableCell.identifier, for: indexPath) as? DetailTableCell else { return UITableViewCell() }
         
-        let title = viewModel?.todo?.title ?? ""
-        let dateString = viewModel?.todo?.dateString ?? ""
-        let todo = viewModel?.todo?.todo ?? ""
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd.MM.yy"
+        
+        let title = viewModel?.task(at: indexPath)?.title ?? ""
+        let wasCreate = dateFormatter.string(from: viewModel?.task(at: indexPath)?.wasCreate ?? Date())
+        let todo = viewModel?.task(at: indexPath)?.todo ?? ""
         
         cell.config(title: title,
-                    dateString: dateString,
+                    wasCreate: wasCreate,
                     todo: todo)
    
         cell.delegate = self
@@ -126,23 +147,27 @@ extension DetailViewController: UITableViewDelegate,
     //height cell
     func tableView(_ tableView: UITableView,
                    heightForRowAt indexPath: IndexPath) -> CGFloat {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd.MM.yy"
+        
         let titleView = calculateTextHeight(
-            text: viewModel?.todo?.title ?? "",
+            text: viewModel?.task(at: indexPath)?.title ?? "",
             font: .boldSystemFont(ofSize: 28))
         
         let todoView = calculateTextHeight(
-            text: viewModel?.todo?.todo ?? "",
+            text: viewModel?.task(at: indexPath)?.todo ?? "",
             font: .systemFont(ofSize: 18))
         
-        let lab = calculateTextHeight(text: viewModel?.todo?.dateString ?? "", font: .systemFont(ofSize: 18))
+        let lab = calculateTextHeight(text: dateFormatter.string(from: viewModel?.task(at: indexPath)?.wasCreate ?? Date()), font: .systemFont(ofSize: 18))
         
         return titleView + todoView + lab
     }
     
     //DetailTableCellDelegate
-    func heightWasChange(title: String, todo: String) {
-        viewModel?.todo?.title = title
-        viewModel?.todo?.todo = todo
+    func heightWasChange(title: String,
+                         todo: String) {
+        viewModel?.saveChanges(title: title,
+                               todo: todo)
         
         UIView.setAnimationsEnabled(false)
         tableView.beginUpdates()

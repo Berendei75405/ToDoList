@@ -42,7 +42,7 @@ final class NetworkService: NetworkServiceProtocol {
             if let data = data {
                 do {
                     let decoder = JSONDecoder()
-                    //decoder.dateDecodingStrategy = .iso8601
+                    decoder.dateDecodingStrategy = .iso8601
                     let decodedData = try decoder.decode(T.self, from: data)
                     
                     //кеширование ответа
@@ -50,7 +50,6 @@ final class NetworkService: NetworkServiceProtocol {
                         let cashedResponse = CachedURLResponse(response: response!, data: data)
                         URLCache.shared.storeCachedResponse(cashedResponse, for: request)
                     }
-                    
                     completion(.success(decodedData))
                 } catch {
                     completion(.failure(.errorWithDescription("\(error)")))
